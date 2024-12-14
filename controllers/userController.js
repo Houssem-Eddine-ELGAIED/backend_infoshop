@@ -269,18 +269,15 @@ const resetPasswordRequest = async (req, res, next) => {
       throw new Error('User not found!');
     }
 
-
-
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
       expiresIn: '15m'
     });
-    const passwordResetLink = `http://localhost:3000/reset-password/${user._id}/${token}`;
+    const passwordResetLink = `https://mern-shop-abxs.onrender.com/reset-password/${user._id}/${token}`;
     console.log(passwordResetLink);
-   const info= await transporter.sendMail({
-      from: `"Info shop Tunisia" ${process.env.EMAIL_FROM}`, // sender address
+    await transporter.sendMail({
+      from: `"MERN Shop" ${process.env.EMAIL_FROM}`, // sender address
       to: user.email, // list of receivers
       subject: 'Password Reset', // Subject line
-      text: "Hello this is the link to change ur password ", 
       html: `<p>Hi ${user.name},</p>
 
             <p>We received a password reset request for your account. Click the link below to set a new password:</p>
@@ -290,7 +287,7 @@ const resetPasswordRequest = async (req, res, next) => {
             <p>If you didn't request this, you can ignore this email.</p>
 
             <p>Thanks,<br>
-            INFIO SHOP TUNISIA </p>` // html body
+            MERN Shop Team</p>` // html body
     });
 
     res
@@ -305,51 +302,27 @@ const resetPasswordRequest = async (req, res, next) => {
 // @method   POST
 // @endpoint /api/users/reset-password/reset/:id/:token
 // @access   Private
-
 const resetPassword = async (req, res, next) => {
   try {
-    const { password } = req.body; // Nouveau mot de passe envoyé dans la requête
-    const { id: userId, token } = req.params; // ID utilisateur et token dans l'URL
-    
-    // Vérification du token JWT
-    let decodedToken;
-    try {
-      decodedToken = jwt.verify(token, process.env.JWT_SECRET);
-    } catch (error) {
-      return res.status(401).json({ message: 'Invalid or expired token' });
-    }
-
-    // Vérification si le token correspond à l'utilisateur
-    if (decodedToken.userId !== userId) {
-      return res.status(400).json({ message: 'Token does not match user ID' });
-    }
-
-    // Récupérer l'utilisateur dans la base de données
+    const { password } = req.body;
+    const { id: userId, token } = req.params;
     const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+    const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
+
+    if (!decodedToken) {
+      res.statusCode = 401;
+      throw new Error('Invalid or expired token');
     }
 
-    // Vérification que le nouveau mot de passe n'est pas identique à l'ancien
-    if (bcrypt.compareSync(password, user.password)) {
-      return res.status(400).json({ message: 'New password cannot be the same as the old password' });
-    }
-
-    // Hacher le nouveau mot de passe avant de le sauvegarder
     const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Sauvegarder le nouveau mot de passe
     user.password = hashedPassword;
     await user.save();
 
-    // Réponse de succès
     res.status(200).json({ message: 'Password successfully reset' });
-
   } catch (error) {
     next(error);
   }
 };
-
 
 export {
   loginUser,

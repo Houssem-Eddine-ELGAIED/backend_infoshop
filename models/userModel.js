@@ -22,8 +22,8 @@ const userSchema = new mongoose.Schema(
     // Indicates whether the user is an admin or not
     isAdmin: {
       type: Boolean,
-      required: false,
-      default: true
+      required: true,
+      default: false
     }
   },
   { timestamps: true } // Adds createdAt and updatedAt timestamps

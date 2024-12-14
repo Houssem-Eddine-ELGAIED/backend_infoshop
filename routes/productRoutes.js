@@ -93,17 +93,4 @@ router
   .put(validator.updateProduct, validateRequest, protect, admin, updateProduct)
   .delete(validator.deleteProduct, validateRequest, protect, admin, deleteProduct);
 
-// Route pour récupérer les produits par catégorie
-router.get('/category/:category', async (req, res) => {
-  const category = req.params.category;
-
-  try {
-    const products = await Product.find({ category }); // Filtrer par catégorie
-    res.json(products);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
-
 export default router;
